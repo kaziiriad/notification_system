@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from ..schemas import NotificationCreate
+from ..schemas.notification import NotificationCreate
 
 notification_router = APIRouter(tags=["Notifications"])
 
