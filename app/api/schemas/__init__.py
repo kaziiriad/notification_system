@@ -13,5 +13,5 @@ __all__ = [
     "NotificationStatus",
     "Priority",
     "Channel",
-    "Status"
+    "Status",
 ]
