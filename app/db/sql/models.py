@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
 from app.api.schemas import Priority, Channel, Status as NotificationStatus
-Base = declarative_base()
+from .connection import Base
 
 # Enums
 # class Priority(str, Enum):
@@ -34,7 +34,7 @@ class Notification(Base):
     priority = Column(SQLEnum(Priority), nullable=False, index=True)
     channel = Column(SQLEnum(Channel), nullable=False)
     content = Column(Text, nullable=False)
-    template = Column(String(100), nullable=True)
+    # template = Column(String(100), nullable=True)
     status = Column(SQLEnum(NotificationStatus), default=NotificationStatus.PENDING, index=True)
     scheduled_at = Column(DateTime(timezone=True), nullable=True, index=True)
     sent_at = Column(DateTime(timezone=True), nullable=True)
@@ -77,20 +77,20 @@ class NotificationRecipient(Base):
         Index('idx_recipient_user_id', 'user_id'),
     )
 
-class NotificationTemplate(Base):
-    __tablename__ = "notification_templates"
+# class NotificationTemplate(Base):
+#     __tablename__ = "notification_templates"
     
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, nullable=False, index=True)
-    channel = Column(SQLEnum(Channel), nullable=False)
-    subject = Column(String(255), nullable=True)
-    content = Column(Text, nullable=False)
-    variables = Column(Text, nullable=True)  # JSON string of available variables
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+#     id = Column(Integer, primary_key=True, index=True)
+#     name = Column(String(100), unique=True, nullable=False, index=True)
+#     channel = Column(SQLEnum(Channel), nullable=False)
+#     subject = Column(String(255), nullable=True)
+#     content = Column(Text, nullable=False)
+#     variables = Column(Text, nullable=True)  # JSON string of available variables
+#     is_active = Column(Boolean, default=True)
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())
+#     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
-    __table_args__ = (
-        Index('idx_template_name_channel', 'name', 'channel'),
-        Index('idx_template_active', 'is_active'),
-    )
+#     __table_args__ = (
+#         Index('idx_template_name_channel', 'name', 'channel'),
+#         Index('idx_template_active', 'is_active'),
+#     )
