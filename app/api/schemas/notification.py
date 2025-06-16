@@ -48,15 +48,15 @@ class NotificationResponse(BaseModel):
     scheduled_at: Optional[datetime] = None
 
 
-class NotificationStatus(BaseModel):
-    """Schema for notification status response"""
+# class NotificationStatus(BaseModel):
+#     """Schema for notification status response"""
     
-    id: int
-    status: str
-    sent_at: Optional[datetime] = None
-    delivered_count: int
-    failed_count: int
-    pending_count: int
+#     id: int
+#     status: str
+#     sent_at: Optional[datetime] = None
+#     delivered_count: int
+#     failed_count: int
+#     pending_count: int
 
 
 class NotificationListResponse(BaseModel):
