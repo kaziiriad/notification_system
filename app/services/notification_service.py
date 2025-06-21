@@ -1,22 +1,18 @@
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 import uuid
-from sqlalchemy import func
-from app.db.sql.models import Notification, NotificationRecipient,
 from app.db.sql.repositories import NotificationRepository
 from app.api.schemas import (
     NotificationCreate,
     NotificationResponse,
     Status,
-    Channel,
-    Priority
+    Channel
 )
 from .recipient_resolver import RecipientResolver
 from .channel_services import ChannelServiceFactory
 from app.utils.validators import NotificationValidator
-from app.utils
-from datetime import datetime
+from app.db.sql.models import Notification  
 import logging
 
 logger = logging.getLogger(__name__)
@@ -59,7 +55,7 @@ class NotificationService:
             if request.channel == Channel.ALL:
                 # Resolve recipients for all channels
                 all_recipients = []
-                for channel in channels:
+                for channel in [Channel.EMAIL, Channel.SMS, Channel.PUSH]:
                     recipients = self.recipient_resolver.resolve_recipients(request, channel)
                     all_recipients.extend(recipients)
                 recipients = all_recipients
@@ -85,7 +81,6 @@ class NotificationService:
             response = NotificationResponse(
                 id=notification.id,
                 status=notification.status.value,
-                message=message,
                 created_at=notification.created_at,
                 scheduled_at=notification.scheduled_at
             )
