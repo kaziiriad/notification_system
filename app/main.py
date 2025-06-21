@@ -21,7 +21,7 @@ def run_migrations():
     import subprocess
     import os
     
-    migrations_dir = "app/db/sql/migrations"
+    migrations_dir = os.path.join(os.getcwd(), "migration", "alembic")
     original_dir = os.getcwd()
     
     try:
