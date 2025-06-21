@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
-from app.api.schemas import Priority, Channel, Status as NotificationStatus
+from app.api.schemas.common import Priority, Channel, Status  # More specific import
 from .connection import Base
 
 # Enums
@@ -19,7 +19,7 @@ from .connection import Base
 #     SMS = "sms"
 #     ALL = "all"
 
-# class NotificationStatus(str, Enum):
+# class Status(str, Enum):
 #     PENDING = "pending"
 #     PROCESSING = "processing"
 #     SENT = "sent"
@@ -35,7 +35,7 @@ class Notification(Base):
     channel = Column(SQLEnum(Channel), nullable=False)
     content = Column(Text, nullable=False)
     # template = Column(String(100), nullable=True)
-    status = Column(SQLEnum(NotificationStatus), default=NotificationStatus.PENDING, index=True)
+    status = Column(SQLEnum(Status), default=Status.PENDING, index=True)
     scheduled_at = Column(DateTime(timezone=True), nullable=True, index=True)
     sent_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -62,7 +62,7 @@ class NotificationRecipient(Base):
     phone_number = Column(String(20), nullable=True, index=True)
     push_token = Column(String(500), nullable=True)
     
-    status = Column(SQLEnum(NotificationStatus), default=NotificationStatus.PENDING, index=True)
+    status = Column(SQLEnum(Status), default=Status.PENDING, index=True)
     delivered_at = Column(DateTime(timezone=True), nullable=True)
     failed_reason = Column(Text, nullable=True)
     retry_count = Column(Integer, default=0)
