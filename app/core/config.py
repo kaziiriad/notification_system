@@ -34,12 +34,18 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "notification_system"
     POSTGRES_USER: str = "myuser"
     POSTGRES_PASSWORD: str = "mypassword"
-    POSTGRES_HOST: str = "localhost"
+    POSTGRES_HOST: str = "db"
     POSTGRES_PORT: int = 5432
 
     
+    # Celery Configuration
+    CELERY_BROKER_URL: str = "amqp://guest:guest@rabbitmq:5672//"
+    CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
+
+    # RabbitMQ Configuration
+    RABBITMQ_URL: Optional[str] = "amqp://guest:guest@rabbitmq:5672//"
+    
     # Redis Configuration
-    REDIS_URL: Optional[str] = "redis://localhost:6379/0"
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     
@@ -63,6 +69,10 @@ class Settings(BaseSettings):
     SMTP_USER: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
     
+    # SendGrid Configuration
+    SENDGRID_API_KEY: Optional[str] = None
+    SENDGRID_FROM_EMAIL: Optional[str] = None
+
     # SMS Configuration (optional - Twilio)
     TWILIO_ACCOUNT_SID: Optional[str] = None
     TWILIO_AUTH_TOKEN: Optional[str] = None
@@ -78,12 +88,13 @@ class Settings(BaseSettings):
         if not self.DATABASE_URL:
             self.DATABASE_URL = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": True,
         # Allow extra fields that might be in environment
-        extra = "allow"
+        "extra": "allow"
+    }
 
 # Create settings instance
 settings = Settings()

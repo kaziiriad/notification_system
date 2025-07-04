@@ -29,8 +29,9 @@ from .connection import Base
 class Notification(Base):
     __tablename__ = "notifications"
     
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String(36), primary_key=True, index=True)
     sender_user_id = Column(Integer, nullable=True, index=True)  # Reference to external user service
+    subject = Column(String(255), nullable=True)
     priority = Column(SQLEnum(Priority), nullable=False, index=True)
     channel = Column(SQLEnum(Channel), nullable=False)
     content = Column(Text, nullable=False)
@@ -54,7 +55,7 @@ class NotificationRecipient(Base):
     __tablename__ = "notification_recipients"
     
     id = Column(Integer, primary_key=True, index=True)
-    notification_id = Column(Integer, ForeignKey("notifications.id"), nullable=False)
+    notification_id = Column(String(36), ForeignKey("notifications.id"), nullable=False)
     
     # Store recipient info directly (from external user service or provided directly)
     user_id = Column(Integer, nullable=True, index=True)  # Reference to external user service

@@ -1,8 +1,38 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from app.api.endpoints.notification import notification_router
 
 
+def run_migrations():
+    """Run database migrations on startup."""
+    import subprocess
+    import os
+    
+    migrations_dir = os.path.join(os.getcwd(), "migration")
+    original_dir = os.getcwd()
+    
+    try:
+        os.chdir(migrations_dir)
+        subprocess.run(["alembic", "upgrade", "head"], check=True)
+        print("Database migrations completed successfully!")
+    except subprocess.CalledProcessError as e:
+        print(f"Migration failed: {e}")
+        raise
+    finally:
+        os.chdir(original_dir)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup - Run database migrations
+    run_migrations()
+    yield
+    # Shutdown
+    print("Application shutting down...")
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="Notification System API",
     version="1.0.0",
     description="API for managing notifications across multiple channels including push, email, and SMS.",
@@ -15,24 +45,6 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
 )
-
-def run_migrations():
-    """Run database migrations on startup."""
-    import subprocess
-    import os
-    
-    migrations_dir = os.path.join(os.getcwd(), "migration", "alembic")
-    original_dir = os.getcwd()
-    
-    try:
-        os.chdir(migrations_dir)
-        subprocess.run(["alembic", "upgrade", "head"], check=True)
-        print("Database migrations completed successfully!")
-    except subprocess.CalledProcessError as e:
-        print(f"Migration failed: {e}")
-        raise
-    finally:
-        os.chdir(original_dir)
 
 app.include_router(notification_router, prefix="/api/v1/notifications", tags=["Notifications"])
 

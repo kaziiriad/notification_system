@@ -20,6 +20,8 @@ class Channel(str, Enum):
 class Status(str, Enum):
     """Notification status values"""
     PENDING = "pending"
+    QUEUED = "queued"
+    SCHEDULED = "scheduled"
     PROCESSING = "processing"
     SENT = "sent"
     DELIVERED = "delivered"

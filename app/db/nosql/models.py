@@ -38,10 +38,11 @@ class NotificationLogEntry(BaseModel):
     # Response data from external services (for debugging)
     response_data: Optional[Dict[str, Any]] = Field(None, description="Response from external service")
     
-    class Config:
-        json_encoders = {
+    model_config = {
+        "json_encoders": {
             datetime: lambda v: v.isoformat()
         }
+    }
 
 class LogQuery(BaseModel):
     """Query parameters for searching logs"""
