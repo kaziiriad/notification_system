@@ -118,7 +118,7 @@ class NotificationService:
             self.db.rollback()  # Rollback the transaction in case of error
             raise e
 
-    def process_notification(self, notification_id: str):
+    async def process_notification(self, notification_id: str):
         """
         Process and send a notification. This method is intended to be called by a Celery worker.
         """
@@ -142,11 +142,11 @@ class NotificationService:
                 for ch, service in services.items():
                     channel_recipients = [r for r in recipient_list if self._is_recipient_for_channel(r, ch)]
                     if channel_recipients and service.validate_recipients(channel_recipients):
-                        service.send_notification(notification.subject, notification.content, channel_recipients)
+                        await service.send_notification(notification.subject, notification.content, channel_recipients)
             else:
                 service = ChannelServiceFactory.create_service(notification.channel)
                 if service and service.validate_recipients(recipient_list):
-                    service.send_notification(notification.subject, notification.content, recipient_list)
+                    await service.send_notification(notification.subject, notification.content, recipient_list)
             
             self.notification_repository.update_notification_status(notification.id, Status.SENT)
             self.db.commit()
