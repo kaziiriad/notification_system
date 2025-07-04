@@ -8,7 +8,7 @@ class IChannelService(ABC):
     """Interface for channel-specific notification services"""
     
     @abstractmethod
-    async def send_notification(self, content: str, recipients: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def send_notification(self, subject: str, content: str, recipients: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Send notification through specific channel"""
         pass
     
@@ -27,16 +27,31 @@ class INotificationRepository(ABC):
         pass
     
     @abstractmethod
-    def create_recipients(self, notification_id: int, recipients_data: List[dict]) -> List[NotificationRecipient]:
+    def create_recipients(self, notification_id: str, recipients_data: List[dict]) -> List[NotificationRecipient]:
         """Create recipient records for a notification"""
         pass
     
     @abstractmethod
-    def get_notification_by_id(self, notification_id: int) -> Optional[Notification]:
+    def get_notification_by_id(self, notification_id: str) -> Optional[Notification]:
         """Get notification by ID"""
         pass
     
     @abstractmethod
-    def update_notification_status(self, notification_id: int, status: Status) -> bool:
+    def list_notifications(self, page: int, page_size: int) -> (List[Notification], int):
+        """List all notifications with pagination"""
+        pass
+
+    @abstractmethod
+    def update_notification_status(self, notification_id: str, status: Status) -> bool:
         """Update notification status"""
+        pass
+
+    @abstractmethod
+    def get_recipients_by_notification_id(self, notification_id: str) -> List[NotificationRecipient]:
+        """Get all recipients for a given notification"""
+        pass
+
+    @abstractmethod
+    def update_recipient_status(self, recipient_id: int, status: Status, failure_reason: Optional[str] = None) -> bool:
+        """Update recipient status and failure reason if provided"""
         pass

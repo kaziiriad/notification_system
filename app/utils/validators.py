@@ -1,11 +1,17 @@
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
+import re
 from app.api.schemas import NotificationCreate, Channel
 
 class NotificationValidator:
     """Validates notification requests and business rules"""
+    # Email regex pattern
+    EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
     
+    # Phone number pattern (basic international format)
+    PHONE_PATTERN = re.compile(r'^\+?[1-9]\d{1,14}$')
+
     @staticmethod
     def validate_request(request: NotificationCreate) -> List[str]:
         """Validate notification request"""
@@ -30,8 +36,10 @@ class NotificationValidator:
             errors.append("Content cannot be empty")
         
         # Validate scheduled time
-        if request.scheduled_at and request.scheduled_at <= datetime.utcnow():
+        if request.scheduled_at and request.scheduled_at <= datetime.now(timezone.utc):
             errors.append("Scheduled time must be in the future")
         
         return errors
+
+    
 

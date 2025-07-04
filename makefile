@@ -1,7 +1,7 @@
 # Makefile for Notification System Docker operations
 
 # Variables
-COMPOSE_FILE = docker-compose.yml
+COMPOSE_FILE = docker/docker-compose.yml
 PROJECT_NAME = notification-system
 
 # Colors for output
@@ -16,7 +16,7 @@ NC = \033[0m # No Color
 help: ## Show this help message
 	@echo "$(GREEN)Notification System Docker Commands$(NC)"
 	@echo "======================================"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "$(YELLOW)%-15s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "$(YELLOW)%-15s$(NC) %s\n", $1, $2}' $(MAKEFILE_LIST)
 
 build: ## Build all Docker images
 	@echo "$(GREEN)Building Docker images...$(NC)"
@@ -50,11 +50,11 @@ shell-db: ## Open PostgreSQL shell
 
 migrate: ## Run database migrations
 	@echo "$(GREEN)Running database migrations...$(NC)"
-	docker-compose -f $(COMPOSE_FILE) run --rm migrate
+	docker-compose -f $(COMPOSE_FILE) run --rm app sh -c "cd migration && alembic upgrade head"
 
 migrate-create: ## Create a new migration (usage: make migrate-create MESSAGE="your message")
 	@echo "$(GREEN)Creating new migration...$(NC)"
-	docker-compose -f $(COMPOSE_FILE) run --rm app sh -c "cd /app/migrations && python migrate.py create '$(MESSAGE)'"
+	docker-compose -f $(COMPOSE_FILE) run --rm app sh -c "cd migration && alembic revision --autogenerate -m '$(MESSAGE)'"
 
 test: ## Run tests
 	@echo "$(GREEN)Running tests...$(NC)"
@@ -101,3 +101,4 @@ setup: ## Initial setup - build, start services, and run migrations
 	sleep 10
 	make migrate
 	@echo "$(GREEN)Setup complete! API available at http://localhost:8000/docs$(NC)"
+	

@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-
 from app.api.schemas.notification import NotificationCreate, NotificationResponse, NotificationListResponse
-from app.database.connection import get_db  # Assuming you have this dependency
+from app.db.sql.connection import get_db  # Assuming you have this dependency
 from app.services.notification_service import NotificationService
 
 notification_router = APIRouter(tags=["Notifications"])
@@ -14,7 +12,7 @@ def get_notification_service(db: Session = Depends(get_db)) -> NotificationServi
 @notification_router.post("/", response_model=NotificationResponse, status_code=status.HTTP_201_CREATED)
 async def create_notification(
     request: NotificationCreate, 
-    notification_service: NotificationService = Depends(get_notification_service
+    notification_service: NotificationService = Depends(get_notification_service)
 ):
 
     """
@@ -40,12 +38,12 @@ async def create_notification(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while creating the notification."
+            detail=f"Failed to create notification: {str(e)}"
         )
 
 @notification_router.get("/{notification_id}", response_model=NotificationResponse)
 async def get_notification(
-    notification_id: int, 
+    notification_id: str, 
     notification_service: NotificationService = Depends(get_notification_service)
 ):
     """
@@ -54,7 +52,7 @@ async def get_notification(
     - **notification_id**: The ID of the notification to retrieve
     """
     try:
-        notification = await notification_service.get_notification(notification_id)
+        notification = notification_service.get_notification_status(notification_id)
         if not notification:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -64,13 +62,12 @@ async def get_notification(
             id=notification.id,
             status=notification.status.value,
             created_at=notification.created_at,
-            scheduled_at=notification.scheduled_at,
-            content=notification.content
+            scheduled_at=notification.scheduled_at
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while retrieving the notification."
+            detail=f"Failed to get notification: {str(e)}"
         )
 
 @notification_router.get("/", response_model=NotificationListResponse)
@@ -85,16 +82,25 @@ async def list_notifications(
     Returns a list of all notifications in the system by page.
     """
     try:
-        # TODO: Implement pagination logic in the service
-        # For now, we will return a static list for demonstration purposes
+        notifications, total_count = notification_service.list_notifications(page, page_size)
+        
+        notification_responses = [
+            NotificationResponse(
+                id=n.id,
+                status=n.status.value,
+                created_at=n.created_at,
+                scheduled_at=n.scheduled_at
+            ) for n in notifications
+        ]
+        
         return NotificationListResponse(
-            notifications=[],
-            total_count=0,
+            notifications=notification_responses,
+            total=total_count,
             page=page,
-            page_size=page_size
+            per_page=page_size
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while listing notifications."
+            detail=f"Failed to list notifications: {str(e)}"
         )

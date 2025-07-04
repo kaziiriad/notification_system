@@ -20,6 +20,13 @@ dependencies = [
     "pytest-asyncio>=1.0.0",
     "pytest-cov>=6.2.1",
     "pytest-mock>=3.14.1",
+    "redis>=5.0.7",
+    "sendgrid>=6.11.0",
     "sqlalchemy>=2.0.41",
     "starlette>=0.46.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "app/tests",
 ]

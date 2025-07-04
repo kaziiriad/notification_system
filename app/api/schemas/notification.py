@@ -12,6 +12,7 @@ class NotificationCreate(BaseModel):
     sms_numbers: List[str] = Field(default=[], description="List of SMS numbers to notify.")
     priority: Priority = Field(..., description="Priority of the notification.")
     channel: Channel = Field(..., description="Channel to send the notification to.")
+    subject: Optional[str] = Field(None, description="Subject of the notification.")
     content: str = Field(..., description="Content of the notification.")
     template: Optional[str] = None
     scheduled_at: Optional[datetime] = Field(
@@ -41,9 +42,8 @@ class NotificationCreate(BaseModel):
 class NotificationResponse(BaseModel):
     """Schema for notification creation response"""
     
-    id: int
+    id: str
     status: str
-    message: str
     created_at: datetime
     scheduled_at: Optional[datetime] = None
 
