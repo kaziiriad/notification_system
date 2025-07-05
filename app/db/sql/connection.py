@@ -1,6 +1,11 @@
 import os
 from sqlalchemy import create_engine
+<<<<<<< HEAD
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
+=======
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.declarative import declarative_base
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 from typing import Generator
 from app.core.config import settings
 

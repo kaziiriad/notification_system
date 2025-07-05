@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+<<<<<<< HEAD
 
 from app.api.endpoints.notification import notification_router
 
@@ -52,6 +53,10 @@ async def lifespan(app: FastAPI):
     # Shutdown
     print("Application shutting down...")
 
+=======
+from app.api.endpoints.notification import notification_router
+
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 
 app = FastAPI(
     lifespan=lifespan,
@@ -67,6 +72,24 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
 )
+
+def run_migrations():
+    """Run database migrations on startup."""
+    import subprocess
+    import os
+    
+    migrations_dir = "app/db/sql/migrations"
+    original_dir = os.getcwd()
+    
+    try:
+        os.chdir(migrations_dir)
+        subprocess.run(["alembic", "upgrade", "head"], check=True)
+        print("Database migrations completed successfully!")
+    except subprocess.CalledProcessError as e:
+        print(f"Migration failed: {e}")
+        raise
+    finally:
+        os.chdir(original_dir)
 
 app.include_router(notification_router, prefix="/api/v1/notifications", tags=["Notifications"])
 

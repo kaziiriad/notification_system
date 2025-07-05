@@ -1,7 +1,11 @@
 # Makefile for Notification System Docker operations
 
 # Variables
+<<<<<<< HEAD
 COMPOSE_FILE = docker/docker-compose.yml
+=======
+COMPOSE_FILE = docker-compose.yml
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 PROJECT_NAME = notification-system
 
 # Colors for output
@@ -16,7 +20,11 @@ NC = \033[0m # No Color
 help: ## Show this help message
 	@echo "$(GREEN)Notification System Docker Commands$(NC)"
 	@echo "======================================"
+<<<<<<< HEAD
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "$(YELLOW)%-15s$(NC) %s\n", $1, $2}' $(MAKEFILE_LIST)
+=======
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "$(YELLOW)%-15s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 
 build: ## Build all Docker images
 	@echo "$(GREEN)Building Docker images...$(NC)"
@@ -50,11 +58,19 @@ shell-db: ## Open PostgreSQL shell
 
 migrate: ## Run database migrations
 	@echo "$(GREEN)Running database migrations...$(NC)"
+<<<<<<< HEAD
 	docker-compose -f $(COMPOSE_FILE) run --rm app sh -c "cd migration && alembic upgrade head"
 
 migrate-create: ## Create a new migration (usage: make migrate-create MESSAGE="your message")
 	@echo "$(GREEN)Creating new migration...$(NC)"
 	docker-compose -f $(COMPOSE_FILE) run --rm app sh -c "cd migration && alembic revision --autogenerate -m '$(MESSAGE)'"
+=======
+	docker-compose -f $(COMPOSE_FILE) run --rm migrate
+
+migrate-create: ## Create a new migration (usage: make migrate-create MESSAGE="your message")
+	@echo "$(GREEN)Creating new migration...$(NC)"
+	docker-compose -f $(COMPOSE_FILE) run --rm app sh -c "cd /app/migrations && python migrate.py create '$(MESSAGE)'"
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 
 test: ## Run tests
 	@echo "$(GREEN)Running tests...$(NC)"
@@ -100,5 +116,9 @@ setup: ## Initial setup - build, start services, and run migrations
 	make up
 	sleep 10
 	make migrate
+<<<<<<< HEAD
 	@echo "$(GREEN)Setup complete! API available at http://localhost:8000/docs$(NC)"
 	
+=======
+	@echo "$(GREEN)Setup complete! API available at http://localhost:8000/docs$(NC)"
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2

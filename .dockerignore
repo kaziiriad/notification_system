@@ -71,6 +71,10 @@ yarn-error.log*
 
 # Documentation
 docs/
+<<<<<<< HEAD
 *.md
 .qodo/
 .qodoignore
+=======
+*.md
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2

@@ -3,8 +3,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
+<<<<<<< HEAD
 import uuid
 from app.api.schemas.common import Priority, Channel, Status  # More specific import
+=======
+from app.api.schemas import Priority, Channel, Status as NotificationStatus
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 from .connection import Base
 
 # Enums
@@ -37,7 +41,11 @@ class Notification(Base):
     channel = Column(SQLEnum(Channel), nullable=False)
     content = Column(Text, nullable=False)
     # template = Column(String(100), nullable=True)
+<<<<<<< HEAD
     status = Column(SQLEnum(Status), default=Status.PENDING, index=True)
+=======
+    status = Column(SQLEnum(NotificationStatus), default=NotificationStatus.PENDING, index=True)
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
     scheduled_at = Column(DateTime(timezone=True), nullable=True, index=True)
     sent_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

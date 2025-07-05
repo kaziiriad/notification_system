@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.api.schemas.notification import NotificationCreate, NotificationResponse, NotificationListResponse
@@ -104,3 +105,18 @@ async def list_notifications(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list notifications: {str(e)}"
         )
+=======
+from fastapi import APIRouter, HTTPException, Depends
+
+from ..schemas.notification import NotificationCreate
+
+notification_router = APIRouter(tags=["Notifications"])
+
+@notification_router.post("/create")
+async def create_notification(notification: NotificationCreate):
+
+    return {
+        "message": "Notification created successfully",
+        "notification" : notification.model_dump_json()
+    }
+>>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
