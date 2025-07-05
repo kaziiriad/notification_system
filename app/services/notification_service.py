@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
-import uuid
 from app.db.sql.repositories import NotificationRepository
 from app.api.schemas import (
     NotificationCreate,
@@ -50,7 +49,6 @@ class NotificationService:
 
             # step 2: create the notification record
             notification_data = {
-                "id": str(uuid.uuid4()),
                 "subject": request.subject,
                 "content": request.content,
                 "channel": request.channel,

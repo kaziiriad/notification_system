@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
+import uuid
 from app.api.schemas.common import Priority, Channel, Status  # More specific import
 from .connection import Base
 
@@ -29,7 +30,7 @@ from .connection import Base
 class Notification(Base):
     __tablename__ = "notifications"
     
-    id = Column(String(36), primary_key=True, index=True)
+    id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     sender_user_id = Column(Integer, nullable=True, index=True)  # Reference to external user service
     subject = Column(String(255), nullable=True)
     priority = Column(SQLEnum(Priority), nullable=False, index=True)
