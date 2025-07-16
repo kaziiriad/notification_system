@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-<<<<<<< HEAD
   # API Service
   app:
     build:
@@ -21,8 +20,6 @@ services:
     networks:
       - notification_network
 
-=======
->>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
   # PostgreSQL Database
   db:
     image: postgres:15-alpine
@@ -48,7 +45,6 @@ services:
       timeout: 5s
       retries: 5
 
-<<<<<<< HEAD
   # RabbitMQ Service
   rabbitmq:
     image: rabbitmq:3-management
@@ -81,8 +77,6 @@ services:
     networks:
       - notification_network
 
-=======
->>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 networks:
   notification_network:
     driver: bridge
