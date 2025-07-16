@@ -597,7 +597,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
 name = "lsprotocol"
 version = "2023.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -611,8 +610,6 @@ wheels = [
 ]
 
 [[package]]
-=======
->>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 name = "mako"
 version = "1.3.10"
 source = { registry = "https://pypi.org/simple" }

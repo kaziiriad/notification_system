@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-<<<<<<< HEAD
+from fastapi import FastAPI
 
 from app.api.endpoints.notification import notification_router
 
@@ -53,10 +53,6 @@ async def lifespan(app: FastAPI):
     # Shutdown
     print("Application shutting down...")
 
-=======
-from app.api.endpoints.notification import notification_router
-
->>>>>>> a1ecdf7b4d1c4a83234c658db78c8214db5dc0f2
 
 app = FastAPI(
     lifespan=lifespan,
