@@ -12,7 +12,6 @@ from .recipient_resolver import RecipientResolver
 from .channel_services import ChannelServiceFactory
 from app.utils.validators import NotificationValidator
 from app.db.sql.models import Notification
-from app.worker.tasks import send_notification_task
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,24 +75,31 @@ class NotificationService:
                 raise ValueError("No valid recipients found for the notification.")
             # Create recipient records in the database
             self.notification_repository.create_recipients(notification.id, recipients)
-            
+
+            # Build payload for queue
+            payload = {
+                "id": notification.id,
+                "subject": request.subject,
+                "content": request.content,
+                "channel": request.channel.value,
+                "recipients": recipients
+            }
+
             # Determine the final status and schedule/queue the notification
             if request.scheduled_at and request.scheduled_at > datetime.now(timezone.utc):
                 # Schedule the notification for later
-                send_notification_task.apply_async(
-                    (notification.id,),
-                    eta=request.scheduled_at
-                )
+                # For now, publish with delay metadata (worker handles scheduling)
                 self.notification_repository.update_notification_status(notification.id, Status.SCHEDULED)
                 final_status = Status.SCHEDULED
-                logger.info(f"Notification {notification.id} scheduled for {request.scheduled_at}")
+                logger.info("Notification scheduled", extra={"notification_id": str(notification.id), "scheduled_at": str(request.scheduled_at)})
             else:
-                # Send the notification immediately
-                send_notification_task.delay(notification.id)
+                # Send the notification immediately - publish directly to MQ
+                from app.services.rabbitmq_publisher import publisher
+                publisher.publish(payload)
                 self.notification_repository.update_notification_status(notification.id, Status.QUEUED)
                 final_status = Status.QUEUED
-                logger.info(f"Notification {notification.id} queued for immediate sending")
-            
+                logger.info("Notification queued", extra={"notification_id": str(notification.id), "channel": str(request.channel)})
+
             self.db.commit()
             self.db.refresh(notification)
             
@@ -117,44 +123,36 @@ class NotificationService:
                     logger.error(f"Failed to update notification status to FAILED: {update_error}")
             raise e
 
-    async def process_notification(self, notification_id: str):
+    async def process_notification(self, payload: Dict[str, Any]):
         """
-        Process and send a notification. This method is intended to be called by a Celery worker.
+        Process and send a notification. Called by MQ consumer with full payload.
+        No DB read needed - all data in payload.
         """
-        notification = self.get_notification_status(notification_id)
-        if not notification:
-            logger.error(f"Notification {notification_id} not found for processing.")
-            return
+        notification_id = payload.get("id")
+        channel = Channel(payload.get("channel"))
+        subject = payload.get("subject")
+        content = payload.get("content")
+        recipients = payload.get("recipients", [])
 
         try:
-            self.notification_repository.update_notification_status(notification.id, Status.PROCESSING)
-            self.db.commit()
-
-            recipients = self.notification_repository.get_recipients_by_notification_id(notification.id)
-            recipient_list = [
-                {"email": r.email, "phone_number": r.phone_number, "push_token": r.push_token}
-                for r in recipients
-            ]
-
-            if notification.channel == Channel.ALL:
+            if channel == Channel.ALL:
                 services = ChannelServiceFactory.get_all_services()
                 for ch, service in services.items():
-                    channel_recipients = [r for r in recipient_list if self._is_recipient_for_channel(r, ch)]
+                    channel_recipients = [r for r in recipients if self._is_recipient_for_channel(r, ch)]
                     if channel_recipients and service.validate_recipients(channel_recipients):
-                        await service.send_notification(notification.subject, notification.content, channel_recipients)
+                        await service.send_notification(subject, content, channel_recipients)
             else:
-                service = ChannelServiceFactory.create_service(notification.channel)
-                if service and service.validate_recipients(recipient_list):
-                    await service.send_notification(notification.subject, notification.content, recipient_list)
-            
-            self.notification_repository.update_notification_status(notification.id, Status.SENT)
+                service = ChannelServiceFactory.create_service(channel)
+                if service and service.validate_recipients(recipients):
+                    await service.send_notification(subject, content, recipients)
+
+            self.notification_repository.update_notification_status(notification_id, Status.SENT)
             self.db.commit()
+            logger.info("Notification sent", extra={"notification_id": str(notification_id)})
         except Exception as e:
-            logger.exception(f"Error processing notification {notification.id}")
-            self.notification_repository.update_notification_status(notification.id, Status.FAILED, failure_reason=str(e))
+            logger.exception("Failed to process notification", extra={"notification_id": str(notification_id), "error": str(e)})
+            self.notification_repository.update_notification_status(notification_id, Status.FAILED, failure_reason=str(e))
             self.db.commit()
-            # Optionally re-raise the exception if you want Celery to handle retries
-            # raise e
 
 
     def _is_recipient_for_channel(self, recipient: Dict[str, Any], channel: Channel) -> bool:
