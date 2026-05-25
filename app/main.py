@@ -3,6 +3,7 @@ from fastapi import FastAPI
 import logging
 
 from app.api.endpoints.notification import notification_router
+from app.api.endpoints.auth import router as auth_router
 from app.core.logging_config import configure_logging
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ app = FastAPI(
 )
 
 app.include_router(notification_router, prefix="/api/v1/notifications", tags=["Notifications"])
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 
 @app.get("/")
 async def read_root():

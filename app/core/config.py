@@ -75,6 +75,14 @@ class Settings(BaseSettings):
     # Push Notification Configuration (optional - Firebase)
     FCM_SERVER_KEY: Optional[str] = None
 
+    # JWT Service Auth
+    JWT_SECRET_KEY: str = "your-super-secret-key-change-in-production-min-32-chars"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRY_MINUTES: int = 60
+
+    # Service-to-service auth
+    SERVICE_API_SECRET: str = "service-secret-change-in-production"
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
