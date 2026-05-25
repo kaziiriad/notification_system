@@ -36,6 +36,7 @@ RUN addgroup --system app && adduser --system --group app
 
 # Set the working directory
 WORKDIR /home/app
+ENV APP_HOME=/home/app
 COPY . .
 
 # Change ownership of the app directory

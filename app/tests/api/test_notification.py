@@ -11,9 +11,8 @@ from app.api.schemas import Status, Channel, Priority
 # Fixture for the TestClient
 @pytest.fixture(scope="module")
 def client():
-    with patch("app.main.run_migrations"):
-        with TestClient(app) as c:
-            yield c
+    with TestClient(app) as c:
+        yield c
 
 # Test for successful notification creation
 def test_create_notification_success(client: TestClient):

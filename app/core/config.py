@@ -28,19 +28,11 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # Database Configuration
-    DATABASE_URL: Optional[str] = None
-    
-    # PostgreSQL specific settings
-    POSTGRES_DB: str = "notification_system"
-    POSTGRES_USER: str = "myuser"
-    POSTGRES_PASSWORD: str = "mypassword"
-    POSTGRES_HOST: str = "db"
-    POSTGRES_PORT: int = 5432
-
+    DATABASE_URL: str
     
     # Celery Configuration
     CELERY_BROKER_URL: str = "amqp://guest:guest@rabbitmq:5672//"
-    CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
+    CELERY_RESULT_BACKEND: str = "rpc://guest:guest@rabbitmq:5672//"
 
     # RabbitMQ Configuration
     RABBITMQ_URL: Optional[str] = "amqp://guest:guest@rabbitmq:5672//"
@@ -81,13 +73,6 @@ class Settings(BaseSettings):
     # Push Notification Configuration (optional - Firebase)
     FCM_SERVER_KEY: Optional[str] = None
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        
-        # If DATABASE_URL is not set, construct it from PostgreSQL components
-        if not self.DATABASE_URL:
-            self.DATABASE_URL = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
@@ -105,9 +90,6 @@ if settings.DEBUG:
     print(f"   DATABASE_URL: {settings.DATABASE_URL}")
     print(f"   DEBUG: {settings.DEBUG}")
     print(f"   ENVIRONMENT: {settings.ENVIRONMENT}")
-    print(f"   POSTGRES_HOST: {settings.POSTGRES_HOST}")
-    print(f"   POSTGRES_USER: {settings.POSTGRES_USER}")
-    print(f"   POSTGRES_DB: {settings.POSTGRES_DB}")
     
     # Determine database type
     if settings.DATABASE_URL:
