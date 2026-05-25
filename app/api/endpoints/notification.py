@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from sqlalchemy.orm import Session
 from app.api.schemas.notification import NotificationCreate, NotificationResponse, NotificationListResponse
-from app.db.sql.connection import get_db  # Assuming you have this dependency
+from app.db.sql.connection import get_db
 from app.services.notification_service import NotificationService
+from app.core.auth import get_current_service, ServiceTokenPayload
 
 notification_router = APIRouter(tags=["Notifications"])
 
@@ -11,8 +12,9 @@ def get_notification_service(db: Session = Depends(get_db)) -> NotificationServi
 
 @notification_router.post("/", response_model=NotificationResponse, status_code=status.HTTP_201_CREATED)
 async def create_notification(
-    request: NotificationCreate, 
-    notification_service: NotificationService = Depends(get_notification_service)
+    request: NotificationCreate,
+    notification_service: NotificationService = Depends(get_notification_service),
+    service: ServiceTokenPayload = Security(get_current_service, scopes=["notifications:write"]),
 ):
 
     """
@@ -43,8 +45,9 @@ async def create_notification(
 
 @notification_router.get("/{notification_id}", response_model=NotificationResponse)
 async def get_notification(
-    notification_id: str, 
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_id: str,
+    notification_service: NotificationService = Depends(get_notification_service),
+    service: ServiceTokenPayload = Security(get_current_service, scopes=["notifications:read"]),
 ):
     """
     Get a notification by ID.
@@ -74,7 +77,8 @@ async def get_notification(
 async def list_notifications(
     page: int = 1,
     page_size: int = 10,
-    notification_service: NotificationService = Depends(get_notification_service)
+    notification_service: NotificationService = Depends(get_notification_service),
+    service: ServiceTokenPayload = Security(get_current_service, scopes=["notifications:read"]),
 ):
     """
     List all notifications with pagination.
