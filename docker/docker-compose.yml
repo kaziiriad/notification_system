@@ -1,6 +1,27 @@
 version: '3.8'
 
 services:
+  # Migration Runner
+  migration-runner:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    command: >
+      sh -c "
+        echo 'Waiting for DB to be ready...' &&
+        cd /home/app/migration &&
+        /opt/venv/bin/alembic upgrade head &&
+        echo 'Migrations applied.'
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - notification_network
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: "postgresql://myuser:mypassword@db:5432/notification_system"
   # API Service
   app:
     build:
@@ -10,11 +31,13 @@ services:
     restart: unless-stopped
     env_file:
       - ../.env
+    environment:
+      DATABASE_URL: "postgresql://myuser:mypassword@db:5432/notification_system"
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      migration-runner:
+        condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
     networks:

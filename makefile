@@ -58,7 +58,7 @@ migrate-create: ## Create a new migration (usage: make migrate-create MESSAGE="y
 
 test: ## Run tests
 	@echo "$(GREEN)Running tests...$(NC)"
-	docker-compose -f $(COMPOSE_FILE) run --rm app pytest
+	docker-compose -f $(COMPOSE_FILE) run --rm --no-deps app pytest
 
 dev: ## Start in development mode with hot reload
 	@echo "$(GREEN)Starting in development mode...$(NC)"
