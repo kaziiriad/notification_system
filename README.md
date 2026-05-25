@@ -1,108 +1,122 @@
 # Notification System
 
-A robust and scalable notification system designed to send notifications across multiple channels, including email, SMS, and push notifications. Built with a modern technology stack, this system is designed for high performance and reliability.
+A microservice for sending notifications via email, SMS, and push notifications. Built with FastAPI, SQLAlchemy, PostgreSQL, Celery, and RabbitMQ.
 
 ## Features
 
--   **Multi-Channel Notifications:** Supports sending notifications via email, SMS, and push notifications.
--   **Scheduled Notifications:** Schedule notifications to be sent at a future date and time.
--   **Notification Priorities:** Assign priorities to notifications to ensure that critical alerts are delivered first.
--   **Recipient Management:** Easily manage recipients and their contact information.
--   **Scalable Architecture:** Built with a microservices-based architecture to handle high volumes of notifications.
--   **Asynchronous Processing:** Uses Celery and RabbitMQ for asynchronous task processing to ensure that notifications are sent without blocking the API.
--   **Database Migrations:** Uses Alembic to manage database schema changes.
+- **Multi-Channel Notifications** — Send via email (SendGrid), SMS (Twilio), push (Firebase)
+- **Scheduled Notifications** — Schedule delivery at a future time
+- **Priority Queuing** — Critical alerts delivered first
+- **Asynchronous Processing** — Celery + RabbitMQ handles delivery without blocking the API
+- **Structured Logging** — JSON-formatted logs for production observability
 
-## Technology Stack
+## Architecture
 
--   **Backend:** FastAPI
--   **Database:** PostgreSQL
--   **Asynchronous Tasks:** Celery
--   **Message Broker:** RabbitMQ
--   **Result Backend:** Redis
--   **Database Migrations:** Alembic
--   **Dependency Management:** uv
--   **Testing:** pytest
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   FastAPI   │────▶│  PostgreSQL  │     │  RabbitMQ  │
+│   (REST)   │     │  (metadata) │     │  (broker)  │
+└─────────────┘     └──────────────┘     └─────────────┘
+       │                                         │
+       │         ┌──────────────┐                 │
+       └────────▶│   Celery     │◀────────────────┘
+                 │   Worker    │
+                 └──────────────┘
+                        │
+              ┌─────────┼─────────┐
+              ▼         ▼         ▼
+           Email      SMS       Push
+         (SendGrid) (Twilio)  (FCM)
+```
 
-## Getting Started
-
-### Prerequisites
-
--   Docker
--   Docker Compose
--   Python 3.12+
-
-### Local Setup
-
-1.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/your-username/notification-system.git
-    cd notification-system
-    ```
-
-2.  **Create a `.env` file:**
-
-    Copy the `.env.example` file to a new file named `.env` and update the values as needed.
-
-    ```bash
-    cp .env.example .env
-    ```
-
-3.  **Run the application:**
-
-    ```bash
-    docker-compose up -d
-    ```
-
-## Configuration
-
-The application is configured using environment variables. See the `.env.example` file for a list of available variables.
-
-## Running Tests
-
-To run the tests, use the following command:
+## Quick Start
 
 ```bash
-pytest
+# Start all services
+make up
+
+# API available at http://localhost:8000/docs
 ```
 
 ## API Endpoints
 
-The API is documented using Swagger UI. To access the documentation, go to `http://localhost:8000/docs` in your browser.
-
 ### Create Notification
+```bash
+POST /api/v1/notifications/
+{
+  "user_ids": [1, 2],
+  "channel": "email",
+  "priority": "high",
+  "subject": "Hello",
+  "content": "Notification body"
+}
+```
 
--   **URL:** `/api/v1/notifications/`
--   **Method:** `POST`
--   **Body:**
+### Get Notification
+```bash
+GET /api/v1/notifications/{id}
+```
 
-    ```json
-    {
-      "user_ids": [1, 2],
-      "channel": "email",
-      "priority": "high",
-      "subject": "Test Subject",
-      "content": "Test Content"
-    }
-    ```
+### List Notifications
+```bash
+GET /api/v1/notifications/?page=1&page_size=10
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `CELERY_BROKER_URL` | RabbitMQ connection | `amqp://guest:guest@rabbitmq:5672//` |
+| `CELERY_RESULT_BACKEND` | Celery result backend | `rpc://guest:guest@rabbitmq:5672//` |
+| `SENDGRID_API_KEY` | SendGrid API key | Optional |
+| `SENDGRID_FROM_EMAIL` | Sender email | Optional |
+| `TWILIO_ACCOUNT_SID` | Twilio account | Optional |
+| `TWILIO_AUTH_TOKEN` | Twilio auth | Optional |
+| `FCM_SERVER_KEY` | Firebase Cloud Messaging | Optional |
+
+## Commands
+
+```bash
+make up          # Start services
+make down        # Stop services
+make logs        # View logs
+make test        # Run tests
+make migrate     # Run migrations
+make shell       # Shell in app container
+make shell-db    # PostgreSQL shell
+```
+
+## Testing
+
+```bash
+make test
+# Or without Docker:
+uv run pytest
+```
 
 ## Project Structure
 
 ```
-.
-├── app
-│   ├── api
-│   │   ├── endpoints
-│   │   └── schemas
-│   ├── core
-│   ├── db
-│   │   ├── nosql
-│   │   └── sql
-│   ├── services
-│   ├── tests
-│   ├── utils
-│   └── worker
-├── docker
-├── migration
-└── README.md
+app/
+├── api/                    # FastAPI routes and schemas
+│   ├── endpoints/          # Route handlers
+│   └── schemas/            # Pydantic models
+├── core/                   # Config, logging
+├── db/
+│   ├── nosql/              # MongoDB models (user data)
+│   └── sql/                # PostgreSQL models + repositories
+├── services/               # Business logic
+│   ├── notification_service.py
+│   ├── channel_services.py # Email/SMS/Push factories
+│   └── recipient_resolver.py
+├── utils/                  # Validators, interfaces, utilities
+├── worker/                 # Celery tasks
+└── tests/                  # Test suite
 ```
+
+## Database Schema
+
+**notifications** — id, sender_user_id, subject, priority, channel, content, status, scheduled_at, sent_at, created_at, updated_at
+
+**notification_recipients** — id, notification_id, user_id, email, phone_number, push_token, status, delivered_at, failed_reason, retry_count

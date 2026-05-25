@@ -8,6 +8,7 @@ from app.api.schemas.common import Status, Priority, Channel
 import uuid
 from unittest.mock import patch, AsyncMock
 
+@pytest.mark.skip(reason="Celery-based integration tests - superseded by direct MQ consumer pattern")
 @pytest.mark.integration
 def test_send_notification_task_integration(mock_db_session, celery_worker):
     """
@@ -58,6 +59,7 @@ def test_send_notification_task_integration(mock_db_session, celery_worker):
         # Verify the mock was called
         mock_send.assert_called_once()
 
+@pytest.mark.skip(reason="Celery-based integration tests - superseded by direct MQ consumer pattern")
 @pytest.mark.integration
 def test_worker_task_failure_handling(mock_db_session, celery_worker):
     """Test that worker properly handles task failures."""

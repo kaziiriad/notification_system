@@ -57,21 +57,21 @@ async def test_create_notification_success(notification_service, mock_db_session
     notification_service.notification_repository.create_notification.return_value = mock_notification
     notification_service.recipient_resolver.resolve_recipients.return_value = [{'user_id': 1, 'email': 'test@example.com'}]
     notification_service.notification_repository.create_recipients.return_value = []
-    
-    with patch('app.worker.tasks.send_notification_task.delay', new_callable=MagicMock) as mock_delay:
+
+    with patch('app.services.rabbitmq_publisher.publisher') as mock_publisher:
         # Act
         response = await notification_service.create_notification(request)
 
         # Assert
         assert response.id == mock_notification.id
         assert response.status == mock_notification.status.value
-        
+
         # Verify that the correct methods were called
         notification_service.validator.validate_request.assert_called_once_with(request)
         notification_service.notification_repository.create_notification.assert_called_once()
         notification_service.recipient_resolver.resolve_recipients.assert_called_once()
         notification_service.notification_repository.create_recipients.assert_called_once()
-        mock_delay.assert_called_once_with(mock_notification.id)
+        mock_publisher.publish.assert_called_once()
         mock_db_session.commit.assert_called_once()
 
 @pytest.mark.asyncio
@@ -153,13 +153,14 @@ async def test_create_scheduled_notification(notification_service, mock_db_sessi
     notification_service.notification_repository.create_notification.return_value = mock_notification
     notification_service.recipient_resolver.resolve_recipients.return_value = [{'user_id': 1, 'email': 'test@example.com'}]
     
-    with patch('app.worker.tasks.send_notification_task.apply_async', new_callable=MagicMock) as mock_apply_async:
+    # For scheduled notifications, we don't publish to MQ yet
+    with patch('app.services.rabbitmq_publisher.publisher') as mock_publisher:
         # Act
         response = await notification_service.create_notification(request)
 
         # Assert
         assert response.status == Status.SCHEDULED.value
-        mock_apply_async.assert_called_once_with((mock_notification.id,), eta=scheduled_time)
+        mock_publisher.publish.assert_not_called()
         mock_db_session.commit.assert_called_once()
 
 @pytest.mark.asyncio
@@ -192,7 +193,7 @@ async def test_create_notification_channel_all(notification_service):
     )
     notification_service.notification_repository.create_notification.return_value = mock_notification
 
-    with patch('app.worker.tasks.send_notification_task.delay', new_callable=MagicMock):
+    with patch('app.services.rabbitmq_publisher.publisher'):
         # Act
         await notification_service.create_notification(request)
 

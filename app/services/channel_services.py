@@ -41,7 +41,7 @@ class EmailChannelService(IChannelService):
         try:
             sg = SendGridAPIClient(self.api_key)
             response = sg.send(message)
-            
+
             if 200 <= response.status_code < 300:
                 return {
                     "status": "success",
@@ -49,19 +49,10 @@ class EmailChannelService(IChannelService):
                     "recipients": recipients
                 }
             else:
-                logger.error(f"Failed to send email: {response.body}")
-                return {
-                    "status": "error",
-                    "message": "Failed to send email.",
-                    "details": response.body
-                }
+                raise Exception(f"SendGrid returned {response.status_code}: {response.body}")
         except Exception as e:
             logger.exception("An error occurred while sending email with SendGrid.")
-            return {
-                "status": "error",
-                "message": "An unexpected error occurred.",
-                "details": str(e)
-            }
+            raise
 
     def validate_recipients(self, recipients: List[Dict[str, Any]]) -> bool:
         """Validate that all recipients have a valid email address."""

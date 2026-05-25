@@ -1,5 +1,7 @@
 version: '3.8'
 
+name: notification-system
+
 services:
   # Migration Runner
   migration-runner:
@@ -84,19 +86,20 @@ services:
       timeout: 5s
       retries: 5
 
-  # Celery Worker
+  # Notification Worker (Direct MQ Consumer)
   worker:
     build:
       context: ..
       dockerfile: docker/Dockerfile.api
     container_name: notification_worker
-    command: celery -A app.worker.tasks.celery_app worker --loglevel=info
+    command: python -m app.worker.consumer
     restart: unless-stopped
     env_file:
       - ../.env
     depends_on:
       - app
       - rabbitmq
+      - db
     networks:
       - notification_network
 
