@@ -1,18 +1,23 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi import FastAPI
+import logging
 
 from app.api.endpoints.notification import notification_router
+from app.core.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
+
+# Configure logging at startup
+configure_logging()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("Application startup...")
-    # await run_migrations() # No longer needed, handled by docker-compose
+    logger.info("Application startup")
     yield
     # Shutdown
-    print("Application shutting down...")
+    logger.info("Application shutting down")
 
 
 app = FastAPI(
@@ -30,24 +35,6 @@ app = FastAPI(
     },
 )
 
-def run_migrations():
-    """Run database migrations on startup."""
-    import subprocess
-    import os
-    
-    migrations_dir = "app/db/sql/migrations"
-    original_dir = os.getcwd()
-    
-    try:
-        os.chdir(migrations_dir)
-        subprocess.run(["alembic", "upgrade", "head"], check=True)
-        print("Database migrations completed successfully!")
-    except subprocess.CalledProcessError as e:
-        print(f"Migration failed: {e}")
-        raise
-    finally:
-        os.chdir(original_dir)
-
 app.include_router(notification_router, prefix="/api/v1/notifications", tags=["Notifications"])
 
 @app.get("/")
@@ -55,7 +42,7 @@ async def read_root():
     return {"message": "Welcome to the Notification System API. Use /api/v1/notifications for endpoints."}
 @app.get("/health")
 async def read_health():
-    return {"status": "healthy", "version": "1.0.0"}    
+    return {"status": "healthy", "version": "1.0.0"}
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ engine = create_engine(
     # For PostgreSQL
     pool_pre_ping=True,
     pool_recycle=300,
-    echo=settings.DEBUG,  # Log SQL queries in debug mode
+    echo=settings.DEBUG,  # Set to True to log SQL queries
     # For SQLite, uncomment the line below and comment the above lines
     # connect_args={"check_same_thread": False}
 )
