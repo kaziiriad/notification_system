@@ -6,15 +6,15 @@ from sqlalchemy import pool
 from alembic import context
 from app.core.config import settings
 from app.db.sql.connection import Base
-
 # Add the project root to Python path
 # From migration/alembic/env.py, we need to go up 2 levels to reach project root
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import your models and database configuration
-# Import all models to ensure they're registered with Base
-# import app.db.sql.models
+# This import is crucial for Alembic to detect the models
+from app.db.sql import models
+
 if settings.DATABASE_URL is None:
     raise ValueError("DATABASE_URL must be set")
 

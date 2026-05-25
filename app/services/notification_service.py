@@ -107,13 +107,14 @@ class NotificationService:
             return response
         except Exception as e:
             logger.error(f"Error creating notification: {e}")
+            self.db.rollback()  # Rollback the transaction in case of error
             # Only update notification status if notification was successfully created
-            if notification is not None and hasattr(notification, 'id'):
+            if notification and notification.id:
                 try:
                     self.notification_repository.update_notification_status(notification.id, Status.FAILED)
+                    self.db.commit()
                 except Exception as update_error:
                     logger.error(f"Failed to update notification status to FAILED: {update_error}")
-            self.db.rollback()  # Rollback the transaction in case of error
             raise e
 
     async def process_notification(self, notification_id: str):

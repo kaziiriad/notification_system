@@ -1,6 +1,6 @@
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 from .models import Notification, NotificationRecipient
 from app.utils.interfaces import INotificationRepository
@@ -15,11 +15,12 @@ class NotificationRepository(INotificationRepository):
     def create_notification(self, notification_data: dict) -> Notification:
         notification = Notification(**notification_data)
         self.db.add(notification)
+        self.db.flush()
         return notification
     
     def create_recipients(self, notification_id: str, recipients_data: List[dict]) -> List[NotificationRecipient]:
         """Create recipient records for a notification"""
-        notification = self.get_notification_by_id(notification_id)
+        # notification = self.get_notification_by_id(notification_id)
         recipients = []
         for recipient_data in recipients_data:
             recipient_data['notification_id'] = notification_id
@@ -37,7 +38,7 @@ class NotificationRepository(INotificationRepository):
         """Get all recipients for a given notification"""
         return self.db.query(NotificationRecipient).filter(NotificationRecipient.notification_id == notification_id).all()
 
-    def list_notifications(self, page: int, page_size: int) -> (List[Notification], int):
+    def list_notifications(self, page: int, page_size: int) -> Tuple[List[Notification], int]:
         """List all notifications with pagination"""
         
         query = self.db.query(Notification).order_by(Notification.created_at.desc())
