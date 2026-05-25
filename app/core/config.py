@@ -2,7 +2,10 @@ from pydantic_settings import BaseSettings
 from typing import Optional
 from dotenv import load_dotenv
 import os
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Get the project root directory (where .env should be)
 project_root = Path(__file__).parent.parent.parent
@@ -11,10 +14,9 @@ env_file = project_root / ".env"
 # Load .env file if it exists
 if env_file.exists():
     load_dotenv(env_file)
-    print(f"✅ Loaded .env file from: {env_file}")
+    logger.info("Loaded .env file", env_file=str(env_file))
 else:
-    print(f"⚠️  No .env file found at: {env_file}")
-    print("Using default configuration values")
+    logger.warning("No .env file found, using default configuration")
 
 class Settings(BaseSettings):
     """Application configuration settings."""
@@ -86,16 +88,16 @@ settings = Settings()
 
 # Debug output (only in development)
 if settings.DEBUG:
-    print(f"🔧 Configuration loaded:")
-    print(f"   DATABASE_URL: {settings.DATABASE_URL}")
-    print(f"   DEBUG: {settings.DEBUG}")
-    print(f"   ENVIRONMENT: {settings.ENVIRONMENT}")
-    
+    logger.info("Configuration loaded",
+        DATABASE_URL=settings.DATABASE_URL,
+        DEBUG=settings.DEBUG,
+        ENVIRONMENT=settings.ENVIRONMENT)
+
     # Determine database type
     if settings.DATABASE_URL:
         if "sqlite" in settings.DATABASE_URL.lower():
-            print(f"   Database: SQLite (Local Development)")
+            logger.info("Database: SQLite (Local Development)")
         elif "postgresql" in settings.DATABASE_URL.lower():
-            print(f"   Database: PostgreSQL")
+            logger.info("Database: PostgreSQL")
         else:
-            print(f"   Database: Unknown type")
+            logger.info("Database: Unknown type")
