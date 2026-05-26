@@ -4,6 +4,7 @@ from app.api.schemas.notification import NotificationCreate, NotificationRespons
 from app.db.sql.connection import get_db
 from app.services.notification_service import NotificationService
 from app.core.auth import get_current_service, ServiceTokenPayload
+from app.core.rate_limit_dependency import rate_limit_dependency
 
 notification_router = APIRouter(tags=["Notifications"])
 
@@ -14,7 +15,7 @@ def get_notification_service(db: Session = Depends(get_db)) -> NotificationServi
 async def create_notification(
     request: NotificationCreate,
     notification_service: NotificationService = Depends(get_notification_service),
-    service: ServiceTokenPayload = Security(get_current_service, scopes=["notifications:write"]),
+    service: ServiceTokenPayload = Security(rate_limit_dependency, scopes=["notifications:write"]),
 ):
 
     """
@@ -47,7 +48,7 @@ async def create_notification(
 async def get_notification(
     notification_id: str,
     notification_service: NotificationService = Depends(get_notification_service),
-    service: ServiceTokenPayload = Security(get_current_service, scopes=["notifications:read"]),
+    service: ServiceTokenPayload = Security(rate_limit_dependency, scopes=["notifications:read"]),
 ):
     """
     Get a notification by ID.
@@ -78,7 +79,7 @@ async def list_notifications(
     page: int = 1,
     page_size: int = 10,
     notification_service: NotificationService = Depends(get_notification_service),
-    service: ServiceTokenPayload = Security(get_current_service, scopes=["notifications:read"]),
+    service: ServiceTokenPayload = Security(rate_limit_dependency, scopes=["notifications:read"]),
 ):
     """
     List all notifications with pagination.
