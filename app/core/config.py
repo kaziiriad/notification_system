@@ -83,6 +83,17 @@ class Settings(BaseSettings):
     # Service-to-service auth
     SERVICE_API_SECRET: str = "service-secret-change-in-production"
 
+    # Rate Limiting (Redis-based, per service)
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 100
+    RATE_LIMIT_BURST: int = 20  # Max burst above per-minute limit
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+
+    # Caching
+    CACHE_ENABLED: bool = True
+    CACHE_TTL_SECONDS: int = 30  # Notification status cache TTL
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
