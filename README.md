@@ -12,6 +12,8 @@ A microservice for sending notifications via email, SMS, and push notifications.
 - **Idempotency** — Worker skips already-processed notifications
 - **Structured Logging** — JSON-formatted logs for production observability
 - **JWT Service Auth** — Service-to-service authentication with scoped tokens
+- **Rate Limiting** — Redis token bucket (100 req/min + burst per service)
+- **Redis Caching** — 30s TTL cache for notification lookups
 
 ## Architecture
 
@@ -21,6 +23,10 @@ A microservice for sending notifications via email, SMS, and push notifications.
 │   (REST)   │     │  (metadata) │     │  (broker)  │
 └─────────────┘     └──────────────┘     └─────────────┘
        │                                        │
+       │         ┌──────────────┐              │
+       └────────▶│    Redis     │              │
+       │         │ (cache+rate) │              │
+       │         └──────────────┘              │
        └────────────────┬──────────────────────┘
                         │
                    ┌────▼────┐
@@ -89,6 +95,13 @@ make up
 | `CELERY_BROKER_URL` | RabbitMQ connection | `amqp://guest:guest@rabbitmq:5672/` |
 | `JWT_SECRET_KEY` | Secret key for JWT signing | Must change in prod |
 | `SERVICE_API_SECRET` | Service credential for token mint | `service-secret-change-in-production` |
+| `REDIS_HOST` | Redis host | `redis` (Docker), `localhost` (local) |
+| `REDIS_PORT` | Redis port | `6379` |
+| `RATE_LIMIT_ENABLED` | Enable rate limiting | `True` |
+| `RATE_LIMIT_REQUESTS_PER_MINUTE` | Per-service rate limit | `100` |
+| `RATE_LIMIT_BURST` | Burst allowance above limit | `20` |
+| `CACHE_ENABLED` | Enable Redis caching | `True` |
+| `CACHE_TTL_SECONDS` | Cache TTL | `30` |
 | `SENDGRID_API_KEY` | SendGrid API key | Optional |
 | `SENDGRID_FROM_EMAIL` | Sender email | Optional |
 | `TWILIO_ACCOUNT_SID` | Twilio account | Optional |
@@ -166,5 +179,22 @@ Worker → NotificationConsumer._process_message()
 2. API returns JWT token with scopes (expires in 60 min)
 3. Service includes JWT in Authorization: Bearer <token> header
 4. Protected endpoints validate JWT and check required scopes
+5. Rate limiter checks token bucket for service_id
+6. If rate exceeded → 429 Too Many Requests with Retry-After header
 ```
-```
+
+## Rate Limiting
+
+Token bucket algorithm per service_id via Redis:
+- **Limit**: 100 requests/minute + 20 burst
+- **Key**: `rate_limit:{service_id}`
+- **Response on limit**: `429 Too Many Requests` with headers:
+  - `X-RateLimit-Remaining: 0`
+  - `Retry-After: 60`
+
+## Caching
+
+Redis cache for notification lookups:
+- **TTL**: 30 seconds
+- **Key pattern**: `cache:notification:{notification_id}`
+- **Invalidation**: On status update
